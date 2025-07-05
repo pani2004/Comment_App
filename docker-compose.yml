@@ -4,6 +4,7 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile.dev   
     container_name: comment-backend
     ports:
       - "5000:5000"
@@ -15,6 +16,7 @@ services:
       - ./backend:/app
       - /app/node_modules
     command: npm run start:dev
+
 
   postgres:
     image: postgres:15
