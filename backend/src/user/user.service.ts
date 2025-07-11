@@ -26,8 +26,21 @@ export class UserService {
     },
   });
 
-  // 👇 Exclude password before returning
   const { password, ...result } = user;
   return result;
  }
+ async getMe(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        comments: true, 
+      },
+    });
+  }
 }
+ 

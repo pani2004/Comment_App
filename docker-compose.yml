@@ -1,22 +1,32 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: comment-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev   
+      dockerfile: Dockerfile.dev
     container_name: comment-backend
     ports:
       - "5000:5000"
     depends_on:
       - postgres
-    env_file:
-      - ./backend/.env
     volumes:
       - ./backend:/app
       - /app/node_modules
     command: npm run start:dev
-
 
   postgres:
     image: postgres:15
@@ -24,22 +34,23 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: commentdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./new_pgdata:/var/lib/postgresql/data 
+      - ./new_pgdata:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@comment.com
-      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
       - postgres
 
 volumes:
   pgdata:
+  new_pgdata:

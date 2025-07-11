@@ -14,8 +14,9 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('me')
-  getMe(@Req() req: Request) { 
-    return req.user; 
-  }
+@Get('me')
+async getMe(@Req() req: Request) {
+  const user = req.user as { userId: string };
+  return this.userService.getMe(user.userId);
+ }
 }
