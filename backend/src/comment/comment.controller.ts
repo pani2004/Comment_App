@@ -22,6 +22,8 @@ export class CommentController {
 
   @Post()
   createComment(@Req() req: Request, @Body() dto: CreateCommentDto) {
+    console.log('Authorization header:', req.headers['authorization']);
+    console.log('req.user:', req.user);
     const userId = req.user?.['userId'];
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');

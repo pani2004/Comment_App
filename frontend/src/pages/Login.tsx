@@ -13,7 +13,9 @@ export default function Login() {
     e.preventDefault();
     if (!email || !password) return toast.error('All fields are required');
     try {
-      await axios.post('/auth/login', { email, password });
+      const res = await axios.post('/auth/login', { email, password });
+      console.log('Login response:', res.data);
+      localStorage.setItem('token', res.data.access_token);
       toast.success('Login successful');
       navigate('/');
     } catch (err: any) {

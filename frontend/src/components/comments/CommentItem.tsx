@@ -62,7 +62,9 @@ export default function CommentItem({ comment, onRefresh }: Props) {
   return (
     <div className="border-l-2 pl-4 my-3">
       <div className="mb-1 text-sm text-gray-700">
-        <span className="font-semibold">{comment.user.name || comment.user.email}</span>
+        <span className="font-semibold">
+          {comment.user?.name || comment.user?.email || '[Unknown User]'}
+        </span>
         <span className="ml-2 text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
       </div>
 

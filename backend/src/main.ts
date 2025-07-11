@@ -8,8 +8,6 @@ async function bootstrap() {
   credentials: true,
 });
     app.use((req, res, next) => {
-    console.log(`[Request] ${req.method} ${req.url}`);
-    console.log('[Auth Header]', req.headers.authorization);
     next();
   });
   await app.listen(process.env.PORT ?? 5000);
