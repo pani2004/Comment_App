@@ -17,7 +17,7 @@ A full-stack comment application built with React (Vite), NestJS, PostgreSQL, Pr
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/pani2004/Comment_App
    cd Comment_App
    ```
 
@@ -77,4 +77,4 @@ A full-stack comment application built with React (Vite), NestJS, PostgreSQL, Pr
 
 ---
 
-Enjoy building and testing your comment app!
+
