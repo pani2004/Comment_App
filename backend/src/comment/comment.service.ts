@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { differenceInMinutes } from 'date-fns'; 
+import { differenceInMinutes } from 'date-fns';
+
 @Injectable()
 export class CommentService {
   constructor(private prisma: PrismaService) {}
@@ -19,7 +19,7 @@ export class CommentService {
       },
     });
 
-    // Send notification to parent comment's user (if it's a reply)
+    // Create a notification if it's a reply
     if (parentId) {
       const parentComment = await this.prisma.comment.findUnique({ where: { id: parentId } });
       if (parentComment && parentComment.userId !== userId) {
@@ -47,56 +47,55 @@ export class CommentService {
   }
 
   /**
-   * Get all top-level comments with nested replies (up to 3 levels deep)
+   * Fetch nested comments with up to 3 levels 
    */
   async getNestedComments() {
     return this.prisma.comment.findMany({
-      where: { parent: null }, // Top-level comments only
+      where: { parent: null },
       orderBy: { createdAt: 'desc' },
       include: {
+        user: { select: { id: true, email: true, name: true } },
         replies: {
           include: {
+            user: { select: { id: true, email: true, name: true } },
             replies: {
               include: {
-                replies: true, // Third level replies (deepest)
+                user: { select: { id: true, email: true, name: true } },
+                replies: {
+                  include: {
+                    user: { select: { id: true, email: true, name: true } },
+                  },
+                },
               },
             },
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
           },
         },
       },
     });
   }
+
+  /**
+   * Update a comment if within 15 minutes
+   */
   async updateComment(commentId: string, userId: string, newContent: string) {
-  const comment = await this.prisma.comment.findUnique({
-    where: { id: commentId },
-  });
+    const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
 
-  if (!comment) {
-    throw new NotFoundException('Comment not found');
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.userId !== userId) throw new ForbiddenException('You are not allowed to edit this comment');
+
+    const minutesSinceCreation = differenceInMinutes(new Date(), comment.createdAt);
+    if (minutesSinceCreation > 15) throw new ForbiddenException('You can only edit within 15 minutes of posting');
+
+    return this.prisma.comment.update({
+      where: { id: commentId },
+      data: { content: newContent },
+    });
   }
 
-  if (comment.userId !== userId) {
-    throw new ForbiddenException('You are not allowed to edit this comment');
-  }
-
-  const minutesSinceCreation = differenceInMinutes(new Date(), comment.createdAt);
-  if (minutesSinceCreation > 15) {
-    throw new ForbiddenException('You can only edit within 15 minutes of posting');
-  }
-
-  return this.prisma.comment.update({
-    where: { id: commentId },
-    data: { content: newContent },
-  });
-}
-async deleteComment(commentId: string, userId: string) {
+  /**
+   * Soft delete a comment within 15 minutes
+   */
+  async deleteComment(commentId: string, userId: string) {
     const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
 
     if (!comment) throw new NotFoundException('Comment not found');
@@ -111,12 +110,14 @@ async deleteComment(commentId: string, userId: string) {
     });
   }
 
+  /**
+   * Restore a soft-deleted comment within 15 minutes of deletion
+   */
   async restoreComment(commentId: string, userId: string) {
     const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
 
     if (!comment) throw new NotFoundException('Comment not found');
     if (comment.userId !== userId) throw new ForbiddenException('You are not allowed to restore this comment');
-
     if (!comment.deletedAt) throw new ForbiddenException('Comment is not deleted');
 
     const minutesSinceDeletion = differenceInMinutes(new Date(), comment.deletedAt);

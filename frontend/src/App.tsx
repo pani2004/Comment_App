@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Navbar from './components/Navbar'; 
-import CommentForm from './components/comments/CommentForm';
 import CommentList from './components/comments/CommentList';
 
 function ProtectedLayout() {
@@ -33,10 +32,7 @@ export default function App() {
         {/* Protected Routes (Requires token in localStorage) */}
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={
-            <>
-              <CommentForm />
-              <CommentList />
-            </>
+            <CommentList />
           } />
         </Route>
       </Routes>
